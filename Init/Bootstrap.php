@@ -4,6 +4,7 @@
 
     abstract class Bootstrap{
 
+        
         abstract protected function initRoutes();
 
         private $routes;
@@ -25,6 +26,18 @@
             return $url;
         }
 
+        protected function extractMethodameAndParam($row) {
+            // Use uma expressão regular para encontrar o nome da função e seus parâmetros
+            if (preg_match('/(\w+)\((.+)\)/', $row, $matches)) {
+                $action = $matches[1];
+                $param = $matches[2];
+                
+                // Retorne o nome da função e os parâmetros em um array
+                return array('action' => $action, 'param' => $param);
+            } else {
+                return null;
+            }
+        }
        protected  function run($url){
             $routes = $this -> routes;
 
@@ -36,9 +49,29 @@
                     $controller = new $class;
 
                     $action = $route['action'];
-                    $controller -> $action();
+                  
+               
+
+                    if (strpos($action, '(') !== false && strpos($action, ')') !== false) {
+                        $data = $this -> extractMethodameAndParam($action);
+
+
+                        $action_redirect = $data['action'];
+                        $controller -> $action_redirect($data['param']);
+                        exit;
+                    } else {
+                        $controller -> $action();
+                        exit;
+                    }
+                    
                 }
                 
             }
+
+               $controller =  new \App\Controllers\IndexController;
+            
+               $controller -> notFound();
+            
+           
         }
     }
